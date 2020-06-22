@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style type="text/css">
+        #field td {
+            border: 1px solid black;
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            text-align: center;
+            vertical-align: middle;
+            table-layout: fixed;
+            padding: 1px 1px 1px 1px;
+            font-size: 33px;
+            border-collapse: collapse;
+        }
+        /*#field select{*/
+        /*    font-size: 100%;*/
+        /*    border: 1px;*/
+        /*}*/
+    </style>
+</head>
+<body>
+
+<p>bpm = <input type="text" id="bpm" size="4" value="120"></p>
+<table id="field"></table>
+<button onclick="start()">start</button>
+
+<script>
+    let stateArray = [];
+    let noteArray = [];
+    window.onload = () => {
+        init()
+    }
+</script>
+
+<script>
+    const init = () => {
+        stateArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        noteArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        //table define
+        for (let x=0; x<4; x++){
+            const tr = document.createElement('tr');
+            for (let y=0; y<4; y++){
+                const td = document.createElement('td');
+                const xy = x.toString()+y.toString();
+                td.setAttribute('id', xy);
+                td.setAttribute('onclick', 'changeState(id)');
+
+                const sel = document.createElement('select');
+                sel.setAttribute('id', 's'+xy);
+                for (let z=0; z<freqValList.length; z++){
+                    const op = document.createElement('option');
+                    op.value = freqValList[z];
+                    op.text = freqNameList[z];
+                    if (freqValList[z] === 'c4') {op.setAttribute("selected", "selected");}
+                    sel.appendChild(op);
+                }
+                sel.style.opacity = 0;
+                sel.setAttribute('onchange', 'setNote(id)')
+
+                td.appendChild(sel);
+                tr.appendChild(td);
+            }
+            const table = document.getElementById("field");
+            table.appendChild(tr);
+        }
+    }
+</script>
+
+<script>
+    const changeState = (id) => {
+        const idx = idToIdx[id];
+        const item = document.getElementById(id).childNodes[0];
+
+        switch (stateArray[idx]) {
+            case 0:
+                stateArray[idx] = 1;
+                item.style.opacity = 1;
+                noteArray[idx] = freqKV['c4'];
+                break;
+            case 1:
+                stateArray[idx] = 0;
+                item.style.opacity = 0;
+                noteArray[idx] = 0;
+                break;
+        }
+    }
+</script>
+
+<script>
+    //周波数をarrayにセット
+    const setNote = (id) => {
+        const idx = idToIdx[id.slice(1)];
+        const item = document.getElementById(id);
+        noteArray[idx] = freqKV[freqValList[item.selectedIndex]];
+    }
+</script>
+
+<script>
+    const start = () => {
+        const bpm = document.getElementById('bpm').value;
+        const noteLen = 60*4/bpm/4;
+
+        let timing = 0;
+        for (let x=0; x<noteArray.length; x++){
+            if (noteArray[x] > 0){
+                const audioCtx = new AudioContext();
+                const osc = audioCtx.createOscillator();
+                osc.type = 'square';
+                osc.frequency.value = noteArray[x];
+                osc.connect(audioCtx.destination);
+
+                osc.start(timing);
+                osc.stop(timing+noteLen);
+            }
+            timing += noteLen;
+        }
+        console.log(stateArray)
+        console.log(noteArray)
+    }
+
+</script>
+
+
+<!--resources-->
+<script>
+    const idToIdx = {
+        "00": 0, "01": 1, "02": 2, "03": 3,
+        "10": 4, "11": 5, "12": 6, "13": 7,
+        "20": 8, "21": 9, "22":10, "23":11,
+        "30":12, "31":13, "32":14, "33":15
+    };
+
+    const freqValList = [
+        "a3", "a_3",
+        "b3",
+        "c3", "c_3",
+        "d3", "d_3",
+        "e3",
+        "f3", "f_3",
+        "g3", "g_3",
+        "a4", "a_4",
+        "b4",
+        "c4", "c_4",
+        "d4", "d_4",
+        "e4",
+        "f4", "f_4",
+        "g4", "g_4",
+        "a5", "a_5",
+        "b5",
+        "c5", "c_5",
+        "d5", "d_5",
+        "e5",
+        "f5", "f_5",
+        "g5", "g_5"
+    ];
+    const freqNameList = [
+        "a3", "a#3",
+        "b3",
+        "c3", "c#3",
+        "d3", "d#3",
+        "e3",
+        "f3", "f#3",
+        "g3", "g#3",
+        "a4", "a#4",
+        "b4",
+        "c4", "c#4",
+        "d4", "d#4",
+        "e4",
+        "f4", "f#4",
+        "g4", "g#4",
+        "a5", "a#5",
+        "b5",
+        "c5", "c#5",
+        "d5", "d#5",
+        "e5",
+        "f5", "f#5",
+        "g5", "g#5"
+    ];
+    const freqKV = {
+        "a3":220,
+        "a_3":233,
+        "b3":246,
+        "c3":261,
+        "c_3":277,
+        "d3":293,
+        "d_3":311,
+        "e3":329,
+        "f3":349,
+        "f_3":369,
+        "g3":391,
+        "g_3":415,
+        "a4":440,
+        "a_4":466,
+        "b4":493,
+        "c4":523,
+        "c_4":554,
+        "d4":587,
+        "d_4":622,
+        "e4":659,
+        "f4":698,
+        "f_4":739,
+        "g4":783,
+        "g_4":830,
+        "a5":880,
+        "a_5":932,
+        "b5":987,
+        "c5":1046,
+        "c_5":1108,
+        "d5":1174,
+        "d_5":1244,
+        "e5":1318,
+        "f5":1396,
+        "f_5":1479,
+        "g5":1567,
+        "g_5":1661
+    };
+</script>
+
+</body>
+</html>
